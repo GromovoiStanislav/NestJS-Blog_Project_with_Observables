@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, OneToMany } from 
 import { UserRole } from "./user.interface";
 
 
-@Entity('users')
+@Entity("users")
 export class UserEntity {
 
   @PrimaryGeneratedColumn()
@@ -14,16 +14,16 @@ export class UserEntity {
   @Column({ unique: true })
   username: string;
 
-  @Column({unique: true})
+  @Column({ unique: true })
   email: string;
 
-  @Column()//{select: false}
+  @Column({select: false})
   password: string;
 
-  @Column({type: 'enum', enum: UserRole, default: UserRole.USER})
+  @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   profileImage: string;
 
   @BeforeInsert()
