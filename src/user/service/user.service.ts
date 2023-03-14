@@ -90,7 +90,7 @@ export class UserService {
         if(user) {
           return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
         } else {
-          return 'Wrong Credentials';
+          return of('Wrong Credentials');
         }
       })
     )
@@ -104,7 +104,8 @@ export class UserService {
             const {password, ...result} = user;
             return result;
           } else {
-            throw Error;
+            //throw Error('Wrong Credentials');
+            return null;
           }
         })
       ))
