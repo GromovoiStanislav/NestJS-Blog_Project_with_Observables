@@ -74,6 +74,13 @@ export class UserService {
     );
   }
 
+  updateRoleOfUser(id: number, user: User): Observable<any> {
+    const newRole = {role: user.role}
+    return from(this.userRepository.update(id, newRole)).pipe(
+      switchMap(() => this.findOne(id))
+    );
+  }
+
   updateOne(id: number, user: User): Observable<any> {
     delete user.email;
     delete user.password;
