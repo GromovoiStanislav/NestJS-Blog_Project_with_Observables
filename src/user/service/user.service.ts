@@ -6,6 +6,11 @@ import { User, UserRole } from "../models/user.interface";
 import { Observable, from, throwError, of } from "rxjs";
 import { switchMap, map, catchError } from "rxjs/operators";
 import { AuthService } from "../../auth/auth.service";
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions
+} from "nestjs-typeorm-paginate";
 
 @Injectable()
 export class UserService {
@@ -25,7 +30,7 @@ export class UserService {
         newUser.username = user.username;
         newUser.email = user.email;
         newUser.password = passwordHash;
-        //newUser.role = UserRole.USER;
+        newUser.role = UserRole.USER;
 
         return from(this.userRepository.save(newUser)).pipe(
           map((user: User) => {
@@ -62,6 +67,15 @@ export class UserService {
     );
   }
 
+  paginate(options: IPaginationOptions): Observable<Pagination<User>> {
+    return from(paginate<User>(this.userRepository, options)).pipe(
+      map((users: Pagination<User>) => {
+        users.items.forEach(function (user) {delete user.password});
+        return users;
+      })
+    )
+  }
+
 
   deleteOne(id: number): Observable<any> {
     return from(this.userRepository.delete(id)).pipe(
@@ -75,7 +89,7 @@ export class UserService {
   }
 
   updateRoleOfUser(id: number, user: User): Observable<any> {
-    const newRole = {role: user.role}
+    const newRole = { role: user.role };
     return from(this.userRepository.update(id, newRole)).pipe(
       switchMap(() => this.findOne(id))
     );
@@ -94,21 +108,24 @@ export class UserService {
   login(user: User): Observable<string> {
     return this.validateUser(user.email, user.password).pipe(
       switchMap((user: User) => {
-        if(user) {
+        if (user) {
           return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
         } else {
-          return of('Wrong Credentials');
+          return of("Wrong Credentials");
         }
       })
-    )
+    );
   }
 
   validateUser(email: string, password: string): Observable<User> {
-    return from(this.userRepository.findOne({where:[{ email } ],select: ['id', 'password', 'name', 'username', 'email', 'role', 'profileImage']})).pipe(
+    return from(this.userRepository.findOne({
+      where: [{ email }],
+      select: ["id", "password", "name", "username", "email", "role", "profileImage"]
+    })).pipe(
       switchMap((user: User) => this.authService.comparePasswords(password, user.password).pipe(
         map((match: boolean) => {
-          if(match) {
-            const {password, ...result} = user;
+          if (match) {
+            const { password, ...result } = user;
             return result;
           } else {
             //throw Error('Wrong Credentials');
@@ -116,7 +133,7 @@ export class UserService {
           }
         })
       ))
-    )
+    );
   }
 
 }
