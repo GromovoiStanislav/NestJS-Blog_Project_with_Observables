@@ -44,10 +44,18 @@ export class UserController {
   @Get()
   index(
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-    @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number = 10
+    @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    @Query("username") username: string
   ): Observable<Pagination<User>> {
     limit = limit > 100 ? 100 : limit;
-    return this.userService.paginate({ page, limit, route: "http://localhost:3000/api/users" });
+    page = page <1 ? 1 : page;
+    if (username) {
+      return this.userService.paginateFilterByUsername(
+        { page, limit, route: "http://localhost:3000/api/users" }, { username }
+      );
+    } else {
+      return this.userService.paginate({ page, limit, route: "http://localhost:3000/api/users" });
+    }
   }
 
 

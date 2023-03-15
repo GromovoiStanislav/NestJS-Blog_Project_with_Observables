@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Repository } from "typeorm";
+import { Like, Repository } from "typeorm";
 import { UserEntity } from "../models/user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User, UserRole } from "../models/user.interface";
@@ -56,6 +56,7 @@ export class UserService {
     );
   }
 
+
   findAll(): Observable<User[]> {
     return from(this.userRepository.find()).pipe(
       map((users: User[]) => {
@@ -67,11 +68,46 @@ export class UserService {
     );
   }
 
+
   paginate(options: IPaginationOptions): Observable<Pagination<User>> {
     return from(paginate<User>(this.userRepository, options)).pipe(
       map((users: Pagination<User>) => {
         users.items.forEach(function (user) {delete user.password});
         return users;
+      })
+    )
+  }
+
+
+  paginateFilterByUsername(options: IPaginationOptions, user: User): Observable<Pagination<User>>{
+    return from(this.userRepository.findAndCount({
+      skip: (Number(options.page)-1) * Number(options.limit) || 0,
+      take: Number(options.limit) || 10,
+      order: {id: "ASC"},
+      select: ['id', 'name', 'username', 'email', 'role'],
+      where: [
+        { username: Like(`%${user.username}%`)}
+      ]
+    }))
+      .pipe(
+      map(([users, totalUsers]) => {
+        const usersPageable: Pagination<User> = {
+          items: users,
+          links: {
+            first: options.route + `?limit=${options.limit}&username=${user.username}`,
+            previous: options.route + `?username=${user.username}`,
+            next: options.route + `?limit=${options.limit}&page=${Number(options.page) + 1}&username=${user.username}`,
+            last: options.route + `?limit=${options.limit}&page=${Math.ceil(totalUsers / Number(options.limit))}&username=${user.username}`
+          },
+          meta: {
+            currentPage: Number(options.page),
+            itemCount: users.length,
+            itemsPerPage: Number(options.limit),
+            totalItems: totalUsers,
+            totalPages: Math.ceil(totalUsers / Number(options.limit))
+          }
+        };
+        return usersPageable;
       })
     )
   }
@@ -88,12 +124,14 @@ export class UserService {
     );
   }
 
+
   updateRoleOfUser(id: number, user: User): Observable<any> {
     const newRole = { role: user.role };
     return from(this.userRepository.update(id, newRole)).pipe(
       switchMap(() => this.findOne(id))
     );
   }
+
 
   updateOne(id: number, user: User): Observable<any> {
     delete user.email;
@@ -104,6 +142,7 @@ export class UserService {
       switchMap(() => this.findOne(id))
     );
   }
+
 
   login(user: User): Observable<string> {
     return this.validateUser(user.email, user.password).pipe(
@@ -116,6 +155,7 @@ export class UserService {
       })
     );
   }
+
 
   validateUser(email: string, password: string): Observable<User> {
     return from(this.userRepository.findOne({
