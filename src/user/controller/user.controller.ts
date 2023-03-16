@@ -7,9 +7,9 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Put,
-  Query,
-  UseGuards
+  Put, Request,Response,
+  Query, UploadedFile,
+  UseGuards, UseInterceptors
 } from "@nestjs/common";
 import { UserService } from "../service/user.service";
 import { User, UserRole } from "../models/user.interface";
@@ -19,6 +19,24 @@ import { hasRoles } from "../../auth/decorators/roles.decorator";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { JwtAuthGuard } from "../../auth/guards/jwt-guard";
 import { Pagination } from "nestjs-typeorm-paginate";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from 'multer';
+import * as path from 'node:path';
+import { randomUUID } from "node:crypto";
+
+
+export const storage = {
+  storage: diskStorage({
+    destination: './uploads/profileimages',
+    filename: (req, file, cb) => {
+      const filename: string = path.parse(file.originalname).name.replace(/\s/g, '') + randomUUID();
+      const extension: string = path.parse(file.originalname).ext;
+      //const extension: string = path.extname(file.originalname);
+      cb(null, `${filename}${extension}`)
+    }
+  })
+}
+
 
 @Controller("users")
 export class UserController {
@@ -106,4 +124,24 @@ export class UserController {
     );
   }
 
+
+  @UseGuards(JwtAuthGuard)
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file',storage))
+  uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req): Observable<Object> {
+    const user: User = req.user;
+    return this.userService.updateOne(user.id, {profileImage: file.filename}).pipe(
+      map((user:User) => ({profileImage: user.profileImage}))
+    )
+  }
+
+
+  @Get('profile-image/:imagename')
+  findProfileImage(@Param('imagename') imagename, @Response() res): Observable<Object> {
+    return of(res.sendFile(path.join(process.cwd(), 'uploads/profileimages' ,imagename)));
+  }
+
 }
+
+
+
