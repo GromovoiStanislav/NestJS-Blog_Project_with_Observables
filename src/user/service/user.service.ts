@@ -45,7 +45,7 @@ export class UserService {
 
 
   findOne(id: number): Observable<User | Object> {
-    return from(this.userRepository.findOneBy({ id })).pipe(
+    return from(this.userRepository.findOne({ where: { id }, relations: ["blogs"] })).pipe(
       map((user: User) => {
         if (!user) {
           return { message: "Not found" };
@@ -72,44 +72,46 @@ export class UserService {
   paginate(options: IPaginationOptions): Observable<Pagination<User>> {
     return from(paginate<User>(this.userRepository, options)).pipe(
       map((users: Pagination<User>) => {
-        users.items.forEach(function (user) {delete user.password});
+        users.items.forEach(function(user) {
+          delete user.password;
+        });
         return users;
       })
-    )
+    );
   }
 
 
-  paginateFilterByUsername(options: IPaginationOptions, user: User): Observable<Pagination<User>>{
+  paginateFilterByUsername(options: IPaginationOptions, user: User): Observable<Pagination<User>> {
     return from(this.userRepository.findAndCount({
-      skip: (Number(options.page)-1) * Number(options.limit) || 0,
+      skip: (Number(options.page) - 1) * Number(options.limit) || 0,
       take: Number(options.limit) || 10,
-      order: {id: "ASC"},
-      select: ['id', 'name', 'username', 'email', 'role'],
+      order: { id: "ASC" },
+      select: ["id", "name", "username", "email", "role"],
       where: [
-        { username: Like(`%${user.username}%`)}
+        { username: Like(`%${user.username}%`) }
       ]
     }))
       .pipe(
-      map(([users, totalUsers]) => {
-        const usersPageable: Pagination<User> = {
-          items: users,
-          links: {
-            first: options.route + `?limit=${options.limit}&username=${user.username}`,
-            previous: options.route + `?username=${user.username}`,
-            next: options.route + `?limit=${options.limit}&page=${Number(options.page) + 1}&username=${user.username}`,
-            last: options.route + `?limit=${options.limit}&page=${Math.ceil(totalUsers / Number(options.limit))}&username=${user.username}`
-          },
-          meta: {
-            currentPage: Number(options.page),
-            itemCount: users.length,
-            itemsPerPage: Number(options.limit),
-            totalItems: totalUsers,
-            totalPages: Math.ceil(totalUsers / Number(options.limit))
-          }
-        };
-        return usersPageable;
-      })
-    )
+        map(([users, totalUsers]) => {
+          const usersPageable: Pagination<User> = {
+            items: users,
+            links: {
+              first: options.route + `?limit=${options.limit}&username=${user.username}`,
+              previous: options.route + `?username=${user.username}`,
+              next: options.route + `?limit=${options.limit}&page=${Number(options.page) + 1}&username=${user.username}`,
+              last: options.route + `?limit=${options.limit}&page=${Math.ceil(totalUsers / Number(options.limit))}&username=${user.username}`
+            },
+            meta: {
+              currentPage: Number(options.page),
+              itemCount: users.length,
+              itemsPerPage: Number(options.limit),
+              totalItems: totalUsers,
+              totalPages: Math.ceil(totalUsers / Number(options.limit))
+            }
+          };
+          return usersPageable;
+        })
+      );
   }
 
 
