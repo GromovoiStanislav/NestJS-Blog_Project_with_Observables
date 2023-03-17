@@ -23,6 +23,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from 'multer';
 import * as path from 'node:path';
 import { randomUUID } from "node:crypto";
+import { UserIsUserGuard } from "../../auth/guards/UserIsUser.guard";
 
 
 export const storage = {
@@ -105,6 +106,7 @@ export class UserController {
   }
 
 
+  @UseGuards(JwtAuthGuard, UserIsUserGuard)
   @Put(":id")
   updateOne(@Param("id") id: string, @Body() user: User): Observable<User | Object> {
     return this.userService.updateOne(Number(id), user).pipe(
