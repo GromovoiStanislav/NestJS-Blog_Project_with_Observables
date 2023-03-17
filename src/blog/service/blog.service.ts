@@ -41,6 +41,17 @@ export class BlogService {
     })).pipe(map((blogs: Blog[]) => blogs))
   }
 
+
+  updateOne(id: number, blog: Blog): Observable<Blog> {
+    return from(this.blogRepository.update(id, blog)).pipe(
+      switchMap(() => this.findOne(id))
+    )
+  }
+
+  deleteOne(id: number): Observable<any> {
+    return from(this.blogRepository.delete(id));
+  }
+
   generateSlug(title: string): Observable<string> {
     return of(slugify(title));
   }
