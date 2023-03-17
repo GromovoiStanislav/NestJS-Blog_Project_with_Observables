@@ -1,3 +1,4 @@
+import { Blog } from "../../blog/models/blog.interface";
 
 
 export interface User {
@@ -8,11 +9,12 @@ export interface User {
   password?: string;
   role?: UserRole;
   profileImage?: string;
+  blogs?: Blog[];
 }
 
 export enum UserRole {
-  ADMIN = 'admin',
-  CHIEFEDITOR = 'chiefeditor',
-  EDITOR = 'editor',
-  USER = 'user'
+  ADMIN = "admin",
+  CHIEFEDITOR = "chiefeditor",
+  EDITOR = "editor",
+  USER = "user"
 }
