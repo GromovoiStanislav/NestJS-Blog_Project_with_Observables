@@ -38,6 +38,7 @@ export const storage = {
   })
 }
 
+export const USERS_URL ='http://localhost:3000/api/users';
 
 @Controller("users")
 export class UserController {
@@ -70,10 +71,10 @@ export class UserController {
     page = page <1 ? 1 : page;
     if (username) {
       return this.userService.paginateFilterByUsername(
-        { page, limit, route: "http://localhost:3000/api/users" }, { username }
+        { page, limit, route: USERS_URL }, { username }
       );
     } else {
-      return this.userService.paginate({ page, limit, route: "http://localhost:3000/api/users" });
+      return this.userService.paginate({ page, limit, route: USERS_URL });
     }
   }
 

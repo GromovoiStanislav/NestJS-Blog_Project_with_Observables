@@ -7,6 +7,7 @@ import { Blog } from "../models/blog.interface";
 import { from, Observable, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 import slugify from "slugify";
+import { IPaginationOptions, paginate, Pagination } from "nestjs-typeorm-paginate";
 
 @Injectable()
 export class BlogService {
@@ -26,9 +27,26 @@ export class BlogService {
     );
   }
 
+
   findAll(): Observable<Blog[]> {
     return from(this.blogRepository.find({ relations: ["author"] }));
   }
+
+
+  paginateAll(options: IPaginationOptions): Observable<Pagination<Blog>> {
+    return from(paginate<Blog>(this.blogRepository, options, { relations: ["author"] }));
+    // .pipe(map((blog: Pagination<Blog>) => blog));
+  }
+
+
+  paginateByUser(options: IPaginationOptions, userId: number): Observable<Pagination<Blog>> {
+    return from(paginate<Blog>(this.blogRepository, options, {
+      relations: ["author"],
+      where: [{ authorId: userId }]
+    }));
+    // .pipe(map((blog: Pagination<Blog>) => blog));
+  }
+
 
   findOne(id: number): Observable<Blog> {
     return from(this.blogRepository.findOne({ where: { id }, relations: ["author"] }));
@@ -37,15 +55,15 @@ export class BlogService {
   findByUserId(userId: number): Observable<Blog[]> {
     return from(this.blogRepository.find({
       where: { authorId: userId },
-      relations: ['author']
-    })).pipe(map((blogs: Blog[]) => blogs))
+      relations: ["author"]
+    })).pipe(map((blogs: Blog[]) => blogs));
   }
 
 
   updateOne(id: number, blog: Blog): Observable<Blog> {
     return from(this.blogRepository.update(id, blog)).pipe(
       switchMap(() => this.findOne(id))
-    )
+    );
   }
 
   deleteOne(id: number): Observable<any> {
