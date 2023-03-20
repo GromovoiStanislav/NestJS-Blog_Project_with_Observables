@@ -62,26 +62,50 @@ export class UserController {
 
 
   @Get()
-  index(
+  findAll(
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-    @Query("username") username: string
   ): Observable<Pagination<User>> {
     limit = limit > 100 ? 100 : limit;
     page = page <1 ? 1 : page;
-    if (username) {
-      return this.userService.paginateFilterByUsername(
-        { page, limit, route: USERS_URL }, { username }
-      );
-    } else {
-      return this.userService.paginate({ page, limit, route: USERS_URL });
-    }
+    return this.userService.paginate({ page, limit, route: USERS_URL});
+  }
+
+  @Get('search/by/username/:username')
+  findAllByUsername(
+    @Param('username') username: string,
+    @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+  ): Observable<Pagination<User>> {
+    return this.userService.paginateFilterByUsername(
+      { page, limit, route: `${USERS_URL}/search/by/username/${username}` },
+      {username}
+    );
   }
 
 
+
+  // @Get()
+  // index(
+  //   @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+  //   @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+  //   @Query("username") username: string
+  // ): Observable<Pagination<User>> {
+  //   limit = limit > 100 ? 100 : limit;
+  //   page = page <1 ? 1 : page;
+  //   if (username) {
+  //     return this.userService.paginateFilterByUsername_OLD(
+  //       { page, limit, route: USERS_URL }, { username }
+  //     );
+  //   } else {
+  //     return this.userService.paginate_OLD({ page, limit, route: USERS_URL });
+  //   }
+  // }
+
+
   @Get(":id")
-  findOne(@Param("id") id: string): Observable<User | Object> {
-    return this.userService.findOne(Number(id)).pipe(
+  findOne(@Param("id", ParseIntPipe) id: number): Observable<User | Object> {
+    return this.userService.findOne(id).pipe(
       //map((user: User) => user),
       catchError(err => of({ error: err.message }))
     );
@@ -91,16 +115,16 @@ export class UserController {
   @hasRoles(UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(":id")
-  deleteOne(@Param("id") id: string): Observable<any> {
-    return this.userService.deleteOne(Number(id));
+  deleteOne(@Param("id", ParseIntPipe) id: number): Observable<any> {
+    return this.userService.deleteOne(id);
   }
 
 
   @hasRoles(UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Put(":id/role")
-  updateRoleOfUser(@Param("id") id: string, @Body() user: User): Observable<User> {
-    return this.userService.updateRoleOfUser(Number(id), user).pipe(
+  updateRoleOfUser(@Param("id", ParseIntPipe) id: number, @Body() user: User): Observable<User> {
+    return this.userService.updateRoleOfUser(id, user).pipe(
       //map((user: User) => user),
       catchError(err => of({ error: err.message }))
     );
@@ -109,8 +133,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard, UserIsUserGuard)
   @Put(":id")
-  updateOne(@Param("id") id: string, @Body() user: User): Observable<User | Object> {
-    return this.userService.updateOne(Number(id), user).pipe(
+  updateOne(@Param("id", ParseIntPipe) id: number, @Body() user: User): Observable<User | Object> {
+    return this.userService.updateOne(id, user).pipe(
       //map((user: User) => user),
       catchError(err => of({ error: err.message }))
     );

@@ -10,7 +10,6 @@ export interface Blog {
   updatedAt?: Date;
   likes?: number;
   author?: User;
-  authorId?: number;
   headerImage?: string;
   publishedDate?: Date;
   isPublished?: boolean;

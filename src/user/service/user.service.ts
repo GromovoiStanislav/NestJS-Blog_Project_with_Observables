@@ -69,7 +69,12 @@ export class UserService {
   }
 
 
+
   paginate(options: IPaginationOptions): Observable<Pagination<User>> {
+    return from(paginate<User>(this.userRepository, options));
+  }
+
+  paginate_OLD(options: IPaginationOptions): Observable<Pagination<User>> {
     return from(paginate<User>(this.userRepository, options)).pipe(
       map((users: Pagination<User>) => {
         users.items.forEach(function(user) {
@@ -82,6 +87,14 @@ export class UserService {
 
 
   paginateFilterByUsername(options: IPaginationOptions, user: User): Observable<Pagination<User>> {
+    return from(paginate(this.userRepository, options, {
+      where: [
+        { username: Like(`%${user.username}%`)}
+      ]
+    }))
+  }
+
+  paginateFilterByUsername_OLD(options: IPaginationOptions, user: User): Observable<Pagination<User>> {
     return from(this.userRepository.findAndCount({
       skip: (Number(options.page) - 1) * Number(options.limit) || 0,
       take: Number(options.limit) || 10,

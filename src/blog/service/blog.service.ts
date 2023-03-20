@@ -42,7 +42,7 @@ export class BlogService {
   paginateByUser(options: IPaginationOptions, userId: number): Observable<Pagination<Blog>> {
     return from(paginate<Blog>(this.blogRepository, options, {
       relations: ["author"],
-      where: [{ authorId: userId }]
+      where: [{ author: { id: userId } }]
     }));
     // .pipe(map((blog: Pagination<Blog>) => blog));
   }
@@ -54,7 +54,7 @@ export class BlogService {
 
   findByUserId(userId: number): Observable<Blog[]> {
     return from(this.blogRepository.find({
-      where: { authorId: userId },
+      where: { author: { id: userId } },
       relations: ["author"]
     })).pipe(map((blogs: Blog[]) => blogs));
   }

@@ -78,6 +78,7 @@ export class BlogController {
     @Param("user", ParseIntPipe) userId: number
   ) {
     limit = limit > 100 ? 100 : limit;
+    page = page <1 ? 1 : page;
     return this.blogService.paginateByUser({ limit, page, route: BLOGS_URL + "/user/" + userId }, userId);
   }
 

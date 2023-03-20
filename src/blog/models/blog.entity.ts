@@ -39,8 +39,6 @@ export class BlogEntity {
 
   @ManyToOne(type => UserEntity, user => user.blogs)
   author: UserEntity;
-  @Column({ nullable: true})
-  authorId: number;
 
   @BeforeUpdate()
   updateTimestamp() {
