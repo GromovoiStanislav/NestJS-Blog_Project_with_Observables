@@ -9,15 +9,33 @@ import {
   Param,
   ParseIntPipe,
   Put,
-  Delete, DefaultValuePipe
+  Delete, DefaultValuePipe, Response, UploadedFile, UseInterceptors
 } from "@nestjs/common";
 import { BlogService } from "../service/blog.service";
 import { JwtAuthGuard } from "../../auth/guards/jwt-guard";
-import { Observable } from "rxjs";
+import { Observable, of } from "rxjs";
 import { Blog } from "../models/blog.interface";
 import { UserIsAuthorGuard } from "../guards/user-is-author.guard";
+import * as path from "node:path";
+import { randomUUID } from "node:crypto";
+import { diskStorage } from "multer";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { Image } from "../models/Image.interface";
 
-export const BLOGS_URL ='http://localhost:3000/api/blogs';
+export const BLOGS_URL = "http://localhost:3000/api/blogs";
+
+export const storage = {
+  storage: diskStorage({
+    destination: "./uploads/blog-images",
+    filename: (req, file, cb) => {
+      const filename: string = path.parse(file.originalname).name.replace(/\s/g, "") + randomUUID();
+      const extension: string = path.parse(file.originalname).ext;
+      //const extension: string = path.extname(file.originalname);
+      cb(null, `${filename}${extension}`);
+    }
+  })
+};
+
 
 @Controller("blogs")
 export class BlogController {
@@ -53,14 +71,14 @@ export class BlogController {
   }
 
 
-  @Get('user/:user')
+  @Get("user/:user")
   indexByUser(
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-    @Param('user', ParseIntPipe) userId: number
+    @Param("user", ParseIntPipe) userId: number
   ) {
     limit = limit > 100 ? 100 : limit;
-    return this.blogService.paginateByUser({ limit, page, route: BLOGS_URL + '/user/' + userId }, userId)
+    return this.blogService.paginateByUser({ limit, page, route: BLOGS_URL + "/user/" + userId }, userId);
   }
 
 
@@ -81,6 +99,20 @@ export class BlogController {
   @Delete(":id")
   deleteOne(@Param("id", ParseIntPipe) id: number): Observable<any> {
     return this.blogService.deleteOne(id);
+  }
+
+
+  //@UseGuards(JwtAuthGuard)
+  @Post('image/upload')
+  @UseInterceptors(FileInterceptor('file', storage))
+  uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req): Observable<Image> {
+    return of(file);
+  }
+
+
+  @Get('image/:imagename')
+  findImage(@Param('imagename') imagename, @Response() res): Observable<Object> {
+    return of(res.sendFile(path.join(process.cwd(), 'uploads/blog-images', imagename)));
   }
 
 }
