@@ -1,4 +1,4 @@
 ## NestJS - Blog Project 
-with Observables, TypeOrm and files upload
+NestJS with Observables, TypeOrm and files upload
 
 
